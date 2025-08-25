@@ -63,9 +63,9 @@ if ! command -v kubectl >/dev/null 2>&1; then
     echo "Installing kubectl..."
     KUBECTL_VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt)
     if [ "$ARCH" == "amd64" ]; then
-        curl -LO "https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/amd64/kubectl"
+        curl -Lo "https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/amd64/kubectl"
     else
-        curl -LO "https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/arm64/kubectl"
+        curl -Lo "https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/arm64/kubectl"
     fi
     chmod +x kubectl
     sudo mv kubectl /usr/local/bin/
@@ -183,7 +183,7 @@ if [ "$K8S_CHOICE" == "1" ]; then
     fi
 
     echo "Starting Minikube with driver: $DRIVER"
-    minikube start --driver=$DRIVER
+    minikube start --force $DRIVER
 
 elif [ "$K8S_CHOICE" == "2" ]; then
     if [ "$ARCH" == "amd64" ]; then
