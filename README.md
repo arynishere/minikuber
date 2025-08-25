@@ -40,18 +40,16 @@ This repository contains a **comprehensive Bash script** (`kidkube.sh`) to autom
 ```bash
 git clone https://github.com/arynishere/k8s-installer.git
 cd k8s-installer
+```
 Make the script executable:
 
-bash
-Copy
-Edit
+```
 chmod +x kidkube.sh
+```
 Run the installer:
-
-bash
-Copy
-Edit
+```
 sudo ./kidkube.sh
+```
 Follow the prompts to:
 
 Choose Kubernetes distribution (Minikube or k3s + Kind)
@@ -64,19 +62,14 @@ After installation, verify:
 
 For kubectl:
 
-bash
-Copy
-Edit
+```
 kubectl version --client --short
+```
 If Minikube:
-
-bash
-Copy
-Edit
+```
 minikube status
+```
 If k3s:
-
-bash
-Copy
-Edit
+```
 sudo k3s kubectl get nodes
+```
