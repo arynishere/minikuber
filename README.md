@@ -38,8 +38,8 @@ This repository contains a **comprehensive Bash script** (`kidkube.sh`) to autom
 1. Clone this repository:
 
 ```bash
-git clone https://github.com/arynishere/k8s-installer.git
-cd k8s-installer
+git clone https://github.com/arynishere/minikuber.git
+cd minikuber
 ```
 Make the script executable:
 
