@@ -1,208 +1,190 @@
 #!/bin/bash
-cat << "EOF"
-╔╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╗
-╠╬╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╬╣
-╠╣__        __   _                            _                               ╠╣
-╠╣\ \      / /__| | ___ ___  _ __ ___   ___  | |_ ___                         ╠╣
-╠╣ \ \ /\ / / _ \ |/ __/ _ \| '_ ` _ \ / _ \ | __/ _ \                        ╠╣
-╠╣  \ V  V /  __/ | (_| (_) | | | | | |  __/ | || (_) |                       ╠╣
-╠╣ _ \_/\_/ \___|_|\___\___/|_| |_|_|_|\___|  \__\___/_                       ╠╣
-╠╣(_)_ __  ___| |_ __ _| | | | | _(_) __| | | ___   _| |__   ___ _ __         ╠╣
-╠╣| | '_ \/ __| __/ _` | | | | |/ / |/ _` | |/ / | | | '_ \ / _ \ '__|  _____ ╠╣
-╠╣| | | | \__ \ || (_| | | | |   <| | (_| |   <| |_| | |_) |  __/ |    |_____|╠╣
-╠╣|_|_| |_|___/\__\__,_|_|_| |_|\_\_|\__,_|_|\_\\__,_|_.__/ \___|_|           ╠╣
-╠╣  __ _ _ __ _   _ _ __ (_)___| |__   ___ _ __ ___                           ╠╣
-╠╣ / _` | '__| | | | '_ \| / __| '_ \ / _ \ '__/ _ \                          ╠╣
-╠╣| (_| | |  | |_| | | | | \__ \ | | |  __/ | |  __/                          ╠╣
-╠╣ \__,_|_|   \__, |_| |_|_|___/_| |_|\___|_|  \___|                          ╠╣
-╠╣            |___/                                                           ╠╣
-╠╬╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╬╣
-╚╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╝
-EOF
+# ============================================================
+# Kubernetes Installer Script - "KidKube"
+# Author: Ariyan Afshar (Rewritten by ChatGPT)
+# Works on Debian/Ubuntu and RedHat/CentOS-based systems
+# ============================================================
+
 set -e
 
-echo "===== Kubernetes Installer Script ====="
+# === Color setup ===
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
 
-for cmd in curl sudo; do
-    command -v $cmd >/dev/null 2>&1 || {
-        echo "$cmd is required, installing..."
-        if [ -f /etc/debian_version ]; then
-            sudo apt update && sudo apt install -y $cmd
-        elif [ -f /etc/redhat-release ]; then
-            sudo yum install -y $cmd
-        else
-            echo "Unsupported OS for installing $cmd"
-            exit 1
-        fi
-    }
-done
+# === Banner ===
+cat << "EOF"
+╔═══════════════════════════════════════════════════════════════╗
+║                     🚀 KIDKUBE INSTALLER 🚀                  ║
+╚═══════════════════════════════════════════════════════════════╝
+EOF
 
-if [ -f /etc/redhat-release ]; then
-    OS="redhat"
-elif [ -f /etc/debian_version ]; then
+echo -e "${BOLD}${BLUE}Starting Kubernetes installation...${NC}"
+
+# === Function: Check command existence ===
+check_command() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# === Detect OS and Architecture ===
+if [ -f /etc/debian_version ]; then
     OS="debian"
+elif [ -f /etc/redhat-release ]; then
+    OS="redhat"
 else
-    echo "Unsupported OS"
+    echo -e "${RED}Unsupported OS.${NC}"
     exit 1
 fi
 
 ARCH=$(uname -m)
-if [[ "$ARCH" == "x86_64" ]]; then
-    ARCH="amd64"
-elif [[ "$ARCH" == "aarch64" ]] || [[ "$ARCH" == "arm64" ]]; then
-    ARCH="arm64"
-else
-    echo "Unsupported architecture: $ARCH"
-    exit 1
-fi
+case "$ARCH" in
+    x86_64) ARCH="amd64" ;;
+    aarch64 | arm64) ARCH="arm64" ;;
+    *) echo -e "${RED}Unsupported architecture: $ARCH${NC}"; exit 1 ;;
+esac
 
-echo "Detected OS: $OS"
-echo "Detected Architecture: $ARCH"
+echo -e "${YELLOW}Detected OS:${NC} $OS"
+echo -e "${YELLOW}Detected Architecture:${NC} $ARCH"
 
-if ! command -v kubectl >/dev/null 2>&1; then
-    echo "Installing kubectl..."
-    KUBECTL_VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt)
-    if [ "$ARCH" == "amd64" ]; then
-        curl -Lo "https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/amd64/kubectl"
-    else
-        curl -Lo "https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/arm64/kubectl"
-    fi
-    chmod +x kubectl
-    sudo mv kubectl /usr/local/bin/
-    echo "kubectl installed: $(kubectl version --client --short)"
-fi
-
-echo "Which Kubernetes do you want to install?"
-echo "1) Minikube"
-echo "2) k3s + Kind (k3d)"
-read -rp "Enter choice [1-2]: " K8S_CHOICE
-
-if [ "$K8S_CHOICE" == "1" ]; then
-    if command -v minikube >/dev/null 2>&1; then
-        echo "Minikube already installed: $(minikube version)"
-        read -rp "Do you want to reinstall/update it? [y/N]: " REINSTALL
-        [[ "$REINSTALL" =~ ^[Yy]$ ]] || exit 0
-    fi
-
-    if [ "$OS" == "redhat" ]; then
-        echo "Choose installation type: "
-        echo "1) Binary"
-        echo "2) RPM package"
-        read -rp "Enter choice [1-2]: " TYPE
-    elif [ "$OS" == "debian" ]; then
-        echo "Choose installation type: "
-        echo "1) Binary"
-        echo "2) DEB package"
-        read -rp "Enter choice [1-2]: " TYPE
-    fi
-
-    if [ "$TYPE" == "1" ]; then
-        # Binary
-        if [ "$ARCH" == "amd64" ]; then
-            curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
-            sudo install minikube-linux-amd64 /usr/local/bin/minikube
-            rm minikube-linux-amd64
-        else
-            curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-arm64
-            sudo install minikube-linux-arm64 /usr/local/bin/minikube
-            rm minikube-linux-arm64
-        fi
-    elif [ "$TYPE" == "2" ]; then
-        # Package
+# === Ensure prerequisites ===
+for cmd in curl sudo; do
+    if ! check_command "$cmd"; then
+        echo -e "${YELLOW}Installing missing dependency: $cmd${NC}"
         if [ "$OS" == "debian" ]; then
-            if [ "$ARCH" == "amd64" ]; then
-                curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
-                sudo dpkg -i minikube_latest_amd64.deb
-                rm minikube_latest_amd64.deb
-            else
-                curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_arm64.deb
-                sudo dpkg -i minikube_latest_arm64.deb
-                rm minikube_latest_arm64.deb
-            fi
-        elif [ "$OS" == "redhat" ]; then
-            if [ "$ARCH" == "amd64" ]; then
-                curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-latest.x86_64.rpm
-                sudo rpm -Uvh minikube-latest.x86_64.rpm
-                rm minikube-latest.x86_64.rpm
-            else
-                curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-latest.aarch64.rpm
-                sudo rpm -Uvh minikube-latest.aarch64.rpm
-                rm minikube-latest.aarch64.rpm
-            fi
+            sudo apt update && sudo apt install -y "$cmd"
+        else
+            sudo yum install -y "$cmd"
         fi
-    else
-        echo "Invalid choice"
+    fi
+done
+
+# === Install kubectl ===
+if ! check_command kubectl; then
+    echo -e "${BLUE}Installing kubectl...${NC}"
+    KUBECTL_VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt)
+    if [ -z "$KUBECTL_VERSION" ]; then
+        echo -e "${RED}Failed to fetch kubectl version.${NC}"
         exit 1
     fi
 
-    echo "Choose a Minikube driver:"
+    curl -Lo kubectl "https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/$ARCH/kubectl"
+    sudo install -m 0755 kubectl /usr/local/bin/kubectl
+    rm kubectl
+    echo -e "${GREEN}kubectl installed successfully: $(kubectl version --client --short)${NC}"
+else
+    echo -e "${GREEN}kubectl already installed: $(kubectl version --client --short)${NC}"
+fi
+
+# === Choose Kubernetes Distribution ===
+echo -e "\n${BOLD}Select Kubernetes distribution:${NC}"
+echo "1) Minikube"
+echo "2) k3s + Kind (k3d alternative)"
+read -rp "Enter choice [1-2]: " K8S_CHOICE
+
+# === Install Minikube ===
+if [ "$K8S_CHOICE" == "1" ]; then
+    echo -e "${BLUE}Installing Minikube...${NC}"
+
+    if check_command minikube; then
+        echo -e "${YELLOW}Minikube already installed: $(minikube version)${NC}"
+        read -rp "Reinstall/update Minikube? [y/N]: " REINSTALL
+        [[ "$REINSTALL" =~ ^[Yy]$ ]] || exit 0
+    fi
+
+    echo "Choose installation type:"
+    echo "1) Binary"
+    echo "2) Package (${OS} format)"
+    read -rp "Enter choice [1-2]: " TYPE
+
+    if [ "$TYPE" == "1" ]; then
+        curl -LO "https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-$ARCH"
+        sudo install -m 0755 "minikube-linux-$ARCH" /usr/local/bin/minikube
+        rm "minikube-linux-$ARCH"
+    else
+        if [ "$OS" == "debian" ]; then
+            curl -LO "https://storage.googleapis.com/minikube/releases/latest/minikube_latest_${ARCH}.deb"
+            sudo dpkg -i "minikube_latest_${ARCH}.deb"
+            rm "minikube_latest_${ARCH}.deb"
+        else
+            curl -LO "https://storage.googleapis.com/minikube/releases/latest/minikube-latest.${ARCH}.rpm"
+            sudo rpm -Uvh "minikube-latest.${ARCH}.rpm"
+            rm "minikube-latest.${ARCH}.rpm"
+        fi
+    fi
+
+    echo -e "\nChoose Minikube driver:"
     echo "1) Docker"
     echo "2) VirtualBox"
     echo "3) KVM2"
     read -rp "Enter choice [1-3]: " DRIVER_CHOICE
-    case $DRIVER_CHOICE in
+
+    case "$DRIVER_CHOICE" in
         1) DRIVER="docker" ;;
         2) DRIVER="virtualbox" ;;
         3) DRIVER="kvm2" ;;
-        *) echo "Invalid choice, defaulting to docker"; DRIVER="docker" ;;
+        *) DRIVER="docker"; echo -e "${YELLOW}Defaulting to Docker driver.${NC}" ;;
     esac
 
+    # === Install driver dependencies ===
     if [ "$DRIVER" == "docker" ]; then
-        if ! command -v docker >/dev/null 2>&1; then
-            echo "Installing Docker..."
+        if ! check_command docker; then
+            echo -e "${BLUE}Installing Docker...${NC}"
             if [ "$OS" == "debian" ]; then
                 sudo apt update && sudo apt install -y docker.io
-                sudo systemctl enable --now docker
-                sudo usermod -aG docker $USER
-            elif [ "$OS" == "redhat" ]; then
+            else
                 sudo yum install -y docker
-                sudo systemctl enable --now docker
-                sudo usermod -aG docker $USER
             fi
+            sudo systemctl enable --now docker
+            sudo usermod -aG docker "$USER"
         fi
     elif [ "$DRIVER" == "virtualbox" ]; then
-        if ! command -v VBoxManage >/dev/null 2>&1; then
-            echo "Installing VirtualBox..."
+        if ! check_command VBoxManage; then
+            echo -e "${BLUE}Installing VirtualBox...${NC}"
             if [ "$OS" == "debian" ]; then
                 sudo apt update && sudo apt install -y virtualbox
-            elif [ "$OS" == "redhat" ]; then
+            else
                 sudo yum install -y virtualbox
             fi
         fi
     elif [ "$DRIVER" == "kvm2" ]; then
-        if ! command -v virsh >/dev/null 2>&1; then
-            echo "Installing KVM2 dependencies..."
+        if ! check_command virsh; then
+            echo -e "${BLUE}Installing KVM dependencies...${NC}"
             if [ "$OS" == "debian" ]; then
                 sudo apt update && sudo apt install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager
-                sudo usermod -aG libvirt $USER
-            elif [ "$OS" == "redhat" ]; then
+            else
                 sudo yum install -y qemu-kvm libvirt libvirt-daemon libvirt-client virt-install virt-manager
-                sudo usermod -aG libvirt $USER
             fi
+            sudo usermod -aG libvirt "$USER"
         fi
     fi
 
-    echo "Starting Minikube with driver: $DRIVER"
-    minikube start --force $DRIVER
+    echo -e "${BLUE}Starting Minikube with driver: $DRIVER${NC}"
+    minikube start --driver="$DRIVER" --force
 
+# === Install k3s + Kind ===
 elif [ "$K8S_CHOICE" == "2" ]; then
-    if [ "$ARCH" == "amd64" ]; then
-        curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.29.0/kind-linux-amd64
-    else
-        curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.29.0/kind-linux-arm64
-    fi
-    chmod +x ./kind
-    sudo mv ./kind /usr/local/bin/kind
+    echo -e "${BLUE}Installing Kind & k3s...${NC}"
 
-    echo "Installing k3s..."
+    # Install Kind
+    curl -Lo kind "https://kind.sigs.k8s.io/dl/v0.29.0/kind-linux-$ARCH"
+    sudo install -m 0755 kind /usr/local/bin/kind
+    rm kind
+
+    # Install k3s
     curl -sfL https://get.k3s.io | sh -
 
 else
-    echo "Invalid choice"
+    echo -e "${RED}Invalid choice.${NC}"
     exit 1
 fi
 
-echo "===== Installation completed! ====="
-echo "kubectl version: $(kubectl version --client --short)"
-echo "If Minikube, run: minikube status"
-echo "If k3s, run: sudo k3s kubectl get nodes"
+# === Final Summary ===
+echo -e "\n${GREEN}===== Installation Completed Successfully! =====${NC}"
+echo -e "${YELLOW}kubectl version:${NC} $(kubectl version --client --short)"
+echo -e "${YELLOW}Next steps:${NC}"
+echo "- For Minikube: run ${BOLD}minikube status${NC}"
+echo "- For k3s: run ${BOLD}sudo k3s kubectl get nodes${NC}"
+echo "- For Kind: run ${BOLD}kind get clusters${NC}"
